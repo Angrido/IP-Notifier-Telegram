@@ -77,7 +77,7 @@ crontab -e
 Add this line (adjust the path if needed):
 
 ```bash
-0 * * * * /full/path/to/ip-notifier-telegram.sh
+0 * * * * /root/ip-notifier-telegram.sh
 ```
 
 ---
