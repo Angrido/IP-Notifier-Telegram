@@ -48,15 +48,3 @@ _Monitor and receive instant notifications of your public IP address changes dir
 ```bash
 */15 * * * * /full/path/to/ip-notifier-telegram.sh
 ```
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-<div align="center">
-
-_Made with ❤️ to simplify IP monitoring_
-
-</div>
