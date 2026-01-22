@@ -109,11 +109,34 @@ get_local_ip() {
     
     # Try different methods based on OS
     if command -v ip &> /dev/null; then
-        # Linux with ip command
-        local_ip=$(ip route get 1 2>/dev/null | awk '{print $7; exit}')
+        # Linux with ip command - get all IPs and filter for 192.168.x.x first
+        local_ip=$(ip addr show | grep -oP 'inet \K192\.168\.\d+\.\d+' | head -1)
+        
+        # If no 192.168.x.x found, try 10.x.x.x
+        if [ -z "$local_ip" ]; then
+            local_ip=$(ip addr show | grep -oP 'inet \K10\.\d+\.\d+\.\d+' | head -1)
+        fi
+        
+        # If still nothing, use default route method
+        if [ -z "$local_ip" ]; then
+            local_ip=$(ip route get 1 2>/dev/null | awk '{print $7; exit}')
+        fi
     elif command -v hostname &> /dev/null; then
-        # Universal fallback
-        local_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+        # Universal fallback - prefer 192.168.x.x
+        local all_ips=$(hostname -I 2>/dev/null)
+        
+        # Try to find 192.168.x.x address first
+        local_ip=$(echo "$all_ips" | tr ' ' '\n' | grep '^192\.168\.' | head -1)
+        
+        # If no 192.168.x.x, try 10.x.x.x
+        if [ -z "$local_ip" ]; then
+            local_ip=$(echo "$all_ips" | tr ' ' '\n' | grep '^10\.' | head -1)
+        fi
+        
+        # Otherwise take first IP
+        if [ -z "$local_ip" ]; then
+            local_ip=$(echo "$all_ips" | awk '{print $1}')
+        fi
         
         # macOS alternative
         if [ -z "$local_ip" ]; then
@@ -227,20 +250,20 @@ main() {
     
     # Build and send message if needed
     if [ "$SHOULD_NOTIFY" = true ]; then
-        # Build rich Telegram message with Markdown formatting
-        MESSAGE="🌐 *IP Notification*\n\n"
-        MESSAGE+="📡 *External IP:* \`$EXTERNAL_IP\`\n"
-        MESSAGE+="🏠 *Local IP:* \`$LOCAL_IP\`\n"
-        MESSAGE+="💻 *Hostname:* \`$HOSTNAME\`\n"
-        MESSAGE+="📅 *Time:* \`$CURRENT_TIME\`\n"
+        # Build rich Telegram message with Markdown formatting using $'\n' for proper newlines
+        MESSAGE=$'🌐 *IP Notification*\n\n'
+        MESSAGE+=$'📡 *External IP:* '"\`$EXTERNAL_IP\`"$'\n'
+        MESSAGE+=$'🏠 *Local IP:* '"\`$LOCAL_IP\`"$'\n'
+        MESSAGE+=$'💻 *Hostname:* '"\`$HOSTNAME\`"$'\n'
+        MESSAGE+=$'📅 *Time:* '"\`$CURRENT_TIME\`"$'\n'
         
         if [ -n "$LAST_IP" ] && [ "$LAST_IP" != "$EXTERNAL_IP" ]; then
-            MESSAGE+="\n🔄 *Previous IP:* \`$LAST_IP\`\n"
-            MESSAGE+="✅ *Status:* IP Address Changed"
+            MESSAGE+=$'\n🔄 *Previous IP:* '"\`$LAST_IP\`"$'\n'
+            MESSAGE+=$'✅ *Status:* IP Address Changed'
         elif [ -z "$LAST_IP" ]; then
-            MESSAGE+="\n✅ *Status:* First Run"
+            MESSAGE+=$'\n✅ *Status:* First Run'
         else
-            MESSAGE+="\n✅ *Status:* IP Unchanged"
+            MESSAGE+=$'\n✅ *Status:* IP Unchanged'
         fi
         
         log_message "Sending Telegram notification..."
