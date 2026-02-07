@@ -67,8 +67,6 @@ chmod +x ip-notifier-telegram.sh
 ./ip-notifier-telegram.sh
 ```
 
-Press `Ctrl+C` to stop.
-
 ## ⚙️ Running in Background (24/7)
 
 To keep the script running even after you close the terminal (SSH/Logout), use `nohup`:
