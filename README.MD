@@ -32,7 +32,7 @@ _Monitor and receive instant notifications of your public IP address changes dir
 
 2. **Download the script:**
    ```bash
-   wget [https://raw.githubusercontent.com/angrido/ip-notifier-telegram/main/ip-notifier-telegram.sh](https://raw.githubusercontent.com/angrido/ip-notifier-telegram/main/ip-notifier-telegram.sh)
+   wget https://raw.githubusercontent.com/angrido/ip-notifier-telegram/main/ip-notifier-telegram.sh
    ```
 
 3. **Edit the script:**
