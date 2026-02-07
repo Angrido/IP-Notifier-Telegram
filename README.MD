@@ -14,42 +14,90 @@ _Monitor and receive instant notifications of your public IP address changes dir
 
 ## 📋 Description
 
-**IP Notifier Telegram** is a lightweight and reliable Bash script that monitors your public IP address and sends automatic notifications via Telegram when it detects changes. Perfect for dynamic servers, home labs, and devices with non-static IP addresses.
+**IP Notifier Telegram** is a robust Bash script that monitors your public IP address in **real-time** and sends automatic notifications via Telegram when a change is detected.
+
+Unlike simple cron scripts, this version runs as a continuous service, checking your IP at defined intervals (default: 60s) and maintaining a state file for 100% accuracy.
 
 ## ✨ Features
 
-🔄 **Auto-Retry** — Multi-service support with automatic fallback  
-📊 **Complete Logging** — IP history tracking with automatic log rotation  
-🎯 **Smart Notifications** — Sends messages only when IP changes  
-🛡️ **Robust** — Advanced IP validation and error handling  
-⚡ **Lightweight** — Zero external dependencies besides `curl`
+⚡ **Real-Time Monitoring** — Continuously checks IP (loop-based, no Cron needed)  
+🔄 **Auto-Retry** — Multi-service support with automatic fallback and connection retries  
+📊 **State Persistence** — Uses a state file to remember IP across restarts  
+📝 **Logging** — Tracks history and errors in `~/.ip-notifier.log`  
+🎯 **Smart Notifications** — Sends messages only when IP actually changes  
+🛡️ **Robust** — Handles network failures gracefully without crashing
 
 ## 🚀 Quick Start
 
-1. **Configure Telegram bot:**
-   - Create a bot with [@BotFather](https://t.me/BotFather)
-   - Get your `chat_id` from [@userinfobot](https://t.me/userinfobot)
+### 1. Configure Telegram Bot
 
-2. **Download the script:**
-   ```bash
-   wget https://raw.githubusercontent.com/angrido/ip-notifier-telegram/main/ip-notifier-telegram.sh
-   ```
+1. Create a bot with [@BotFather](https://t.me/BotFather) and save the **HTTP API Token**.
+2. Get your numeric `chat_id` from [@userinfobot](https://t.me/userinfobot).
 
-3. **Edit the script:**
-   ```bash
-   BOT_TOKEN="your-bot-token"
-   CHAT_ID="your-chat-id"
-   ```
+### 2. Download
 
-4. **Run:**
-   ```bash
-   chmod +x ip-notifier-telegram.sh
-   ./ip-notifier-telegram.sh
-   ```
+You can download the script directly using `wget`:
 
-## ⚙️ Automation
-
-**Cron (every 15 minutes):**
 ```bash
-*/15 * * * * /full/path/to/ip-notifier-telegram.sh
+wget https://raw.githubusercontent.com/angrido/ip-notifier-telegram/main/ip-notifier-telegram.sh
 ```
+
+### 3. Configure the Script
+
+Edit the file to set your credentials:
+
+```bash
+nano ip-notifier-telegram.sh
+```
+
+Change these lines:
+
+```bash
+BOT_TOKEN="123456789:ABCdefGHIjklMNOpqrs..."  # Your Bot Token
+CHAT_ID="123456789"                           # Your Chat ID
+CHECK_INTERVAL=60                             # Check every 60 seconds
+```
+
+### 4. Run (Test Mode)
+
+Make it executable and run it to test:
+
+```bash
+chmod +x ip-notifier-telegram.sh
+./ip-notifier-telegram.sh
+```
+
+Press `Ctrl+C` to stop.
+
+## ⚙️ Running in Background (24/7)
+
+To keep the script running even after you close the terminal (SSH/Logout), use `nohup`:
+
+**Start the monitor:**
+
+```bash
+nohup ./ip-notifier-telegram.sh > /dev/null 2>&1 &
+```
+
+**Check if it's running:**
+
+```bash
+ps aux | grep ip-notifier
+```
+
+**Stop the monitor:**
+
+```bash
+pkill -f ip-notifier
+```
+
+## 📂 Files Created
+
+The script creates the following files in your home directory (`$HOME`):
+
+- `.ip-notifier.state`: Stores the last known IP address.
+- `.ip-notifier.log`: Log file with timestamps of checks and changes.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
