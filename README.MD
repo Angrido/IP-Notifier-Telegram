@@ -30,13 +30,18 @@ _Monitor and receive instant notifications of your public IP address changes dir
    - Create a bot with [@BotFather](https://t.me/BotFather)
    - Get your `chat_id` from [@userinfobot](https://t.me/userinfobot)
 
-2. **Edit the script:**
+2. **Download the script:**
+   ```bash
+   wget [https://raw.githubusercontent.com/angrido/ip-notifier-telegram/main/ip-notifier-telegram.sh](https://raw.githubusercontent.com/angrido/ip-notifier-telegram/main/ip-notifier-telegram.sh)
+   ```
+
+3. **Edit the script:**
    ```bash
    BOT_TOKEN="your-bot-token"
    CHAT_ID="your-chat-id"
    ```
 
-3. **Run:**
+4. **Run:**
    ```bash
    chmod +x ip-notifier-telegram.sh
    ./ip-notifier-telegram.sh
