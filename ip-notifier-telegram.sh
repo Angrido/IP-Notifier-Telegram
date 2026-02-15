@@ -12,8 +12,8 @@ CONFIG_FILE="${BASE_DIR}/.ip-notifier.conf.enc"
 ENABLE_LOGGING=true
 FORCE_NOTIFICATION=false
 
-BOT_TOKEN=""
-CHAT_ID=""
+BOT_TOKEN="${BOT_TOKEN:-}"
+CHAT_ID="${CHAT_ID:-}"
 
 IP_SERVICES=(
     "https://api.ipify.org"
