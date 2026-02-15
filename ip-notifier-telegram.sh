@@ -1,4 +1,5 @@
 #!/bin/bash
+umask 077
 
 # ============================================================================
 # USER CONFIGURATION
@@ -6,6 +7,7 @@
 BOT_TOKEN="CHANGE-ME"         # Your Bot Token (e.g., 123456789:AbCde...)
 CHAT_ID="CHANGE-ME"           # Your Chat ID (e.g., 123456789)
 CHECK_INTERVAL=60             # Check frequency in seconds
+NOTIFICATION_DELAY=5          # Seconds to wait before confirming IP change
 
 # File paths
 BASE_DIR="${HOME}"
@@ -53,11 +55,15 @@ check_requirements() {
 
 validate_ip() {
     local ip=$1
-    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+    if [[ $ip =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]]; then
+        for octet in "${BASH_REMATCH[@]:1}"; do
+            if (( octet > 255 )); then
+                return 1
+            fi
+        done
         return 0
-    else
-        return 1
     fi
+    return 1
 }
 
 get_external_ip() {
@@ -93,7 +99,7 @@ send_telegram() {
         log_message "Telegram notification sent successfully."
         return 0
     else
-        log_message "Failed to send Telegram notification: $response"
+        log_message "Failed to send Telegram notification: ${response:0:200}"
         return 1
     fi
 }
@@ -128,6 +134,10 @@ main() {
         # 2. Get Last Known IP from state file
         if [ -f "$STATE_FILE" ]; then
             LAST_IP=$(cat "$STATE_FILE")
+            if ! validate_ip "$LAST_IP"; then
+                log_message "WARNING: Invalid IP in state file, treating as empty."
+                LAST_IP=""
+            fi
         else
             LAST_IP=""
         fi
@@ -157,6 +167,21 @@ main() {
 
         # 5. Send Notification if needed
         if [ "$SHOULD_NOTIFY" = true ]; then
+            # Delay and recheck IP before notifying (only on actual IP change, not initial or forced)
+            if [ "$IP_CHANGED" = true ] && [ -n "$LAST_IP" ]; then
+                log_message "IP change detected ($LAST_IP -> $CURRENT_IP). Waiting ${NOTIFICATION_DELAY}s to confirm..."
+                sleep "$NOTIFICATION_DELAY"
+                RECHECK_IP=$(get_external_ip)
+                if [ -n "$RECHECK_IP" ] && [ "$RECHECK_IP" = "$LAST_IP" ]; then
+                    log_message "IP reverted to $LAST_IP. Change was temporary, skipping notification."
+                    continue
+                fi
+                # Use the rechecked IP if available
+                if [ -n "$RECHECK_IP" ]; then
+                    CURRENT_IP="$RECHECK_IP"
+                fi
+            fi
+
             log_message "Status: $STATUS_MSG. Sending notification..."
             
             LOCAL_IP=$(get_local_ip)
